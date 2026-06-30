@@ -60,17 +60,4 @@ EOF
 | Logistic Regression | 42.1 % | **42.7 % ± 6.2 %** |
 | SVM (LinearSVC) | 43.3 % | 41.7 % ± 6.2 % |
 
-The best cross-validated model is saved automatically to `movie_genre_model.pkl`.
 
-## Improving accuracy
-
-- **Larger dataset** — replace the built-in plots with the
-  [CMU Movie Summary Corpus](http://www.cs.cmu.edu/~ark/personas/) (42 k plots).
-- **Word embeddings** — swap TF-IDF for `sentence-transformers`
-  (`all-MiniLM-L6-v2`) for richer semantic features.
-- **Fine-tuned transformer** — a DistilBERT classifier typically reaches
-  80–90 % F1 on genre classification tasks.
-
-## License
-
-MIT
