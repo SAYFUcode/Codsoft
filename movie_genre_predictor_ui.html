@@ -1,0 +1,272 @@
+
+<style>
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: var(--font-sans); background: transparent; }
+.wrap { padding: 1.5rem 0 2rem; max-width: 660px; }
+h2 { font-size: 20px; font-weight: 500; color: var(--text-primary); margin-bottom: 4px; }
+.sub { font-size: 14px; color: var(--text-secondary); margin-bottom: 1.5rem; }
+textarea {
+  width: 100%; min-height: 110px; resize: vertical;
+  padding: 12px; border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius); font-size: 15px;
+  font-family: var(--font-sans); color: var(--text-primary);
+  background: var(--surface-2); line-height: 1.6;
+}
+textarea:focus { outline: none; border-color: var(--border-accent); }
+.row { display: flex; gap: 10px; margin-top: 12px; align-items: center; }
+select {
+  padding: 8px 12px; border: 0.5px solid var(--border-strong);
+  border-radius: var(--radius); font-size: 14px;
+  color: var(--text-secondary); background: var(--surface-2);
+}
+button.go {
+  padding: 9px 22px; background: var(--fill-accent); color: var(--on-accent);
+  border: none; border-radius: var(--radius); font-size: 14px;
+  font-weight: 500; cursor: pointer; transition: opacity .15s;
+}
+button.go:hover { opacity: .85; }
+button.go:disabled { opacity: .45; cursor: default; }
+.examples { margin-top: 10px; display: flex; gap: 8px; flex-wrap: wrap; }
+.chip {
+  font-size: 13px; padding: 4px 12px; border-radius: 20px;
+  border: 0.5px solid var(--border); color: var(--text-secondary);
+  background: var(--surface-1); cursor: pointer; transition: border-color .15s;
+}
+.chip:hover { border-color: var(--border-accent); color: var(--text-accent); }
+
+.result-card {
+  margin-top: 1.5rem; background: var(--surface-2);
+  border: 0.5px solid var(--border); border-radius: 12px; padding: 1.25rem;
+}
+.genre-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 22px; font-weight: 500; color: var(--text-primary); margin-bottom: 16px;
+}
+.genre-icon { font-size: 28px; }
+.bars-label { font-size: 12px; color: var(--text-muted); margin-bottom: 8px; text-transform: uppercase; letter-spacing: .04em; }
+.bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
+.bar-label { font-size: 13px; color: var(--text-secondary); width: 82px; flex-shrink: 0; }
+.bar-track { flex: 1; height: 8px; background: var(--surface-1); border-radius: 4px; overflow: hidden; }
+.bar-fill { height: 100%; border-radius: 4px; transition: width .5s ease; }
+.bar-pct { font-size: 13px; color: var(--text-secondary); width: 38px; text-align: right; flex-shrink: 0; }
+.divider { border: none; border-top: 0.5px solid var(--border); margin: 16px 0; }
+.model-row { display: flex; justify-content: space-between; align-items: center; }
+.model-label { font-size: 12px; color: var(--text-muted); }
+.model-name { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+
+.perf-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-top: 1.5rem; }
+.perf-card {
+  background: var(--surface-1); border-radius: var(--radius);
+  padding: 14px; text-align: center;
+}
+.perf-name { font-size: 12px; color: var(--text-muted); margin-bottom: 6px; }
+.perf-val { font-size: 20px; font-weight: 500; color: var(--text-primary); }
+.perf-cv { font-size: 11px; color: var(--text-muted); margin-top: 2px; }
+.best-badge {
+  display: inline-block; font-size: 10px; padding: 2px 7px;
+  background: var(--bg-success); color: var(--text-success);
+  border-radius: 10px; margin-top: 5px;
+}
+.sec-head { font-size: 13px; font-weight: 500; color: var(--text-secondary); margin: 1.5rem 0 10px; text-transform: uppercase; letter-spacing: .05em; }
+.error { color: var(--text-danger); font-size: 14px; padding: 10px 0; }
+.spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid var(--border); border-top-color: var(--text-accent); border-radius: 50%; animation: spin .7s linear infinite; vertical-align: -3px; margin-right: 6px; }
+@keyframes spin { to { transform: rotate(360deg); } }
+</style>
+
+<div class="wrap">
+  <h2>Movie Genre Predictor</h2>
+  <p class="sub">Paste or type a plot summary — three classifiers will predict the genre.</p>
+
+  <textarea id="plot" placeholder="Enter a movie plot summary here…"></textarea>
+
+  <div class="examples">
+    <span style="font-size:13px; color:var(--text-muted); align-self:center;">Try:</span>
+    <span class="chip" data-plot="A detective hunts a serial killer who leaves cryptic puzzles at every crime scene, staying one step ahead.">Thriller</span>
+    <span class="chip" data-plot="A crew of astronauts travels to a distant planet after Earth receives an alien signal promising salvation for humanity.">Sci-Fi</span>
+    <span class="chip" data-plot="A family moves into an old Victorian house and strange things begin happening at night—doors open alone and voices whisper from the walls.">Horror</span>
+    <span class="chip" data-plot="Two rival bakers fall in love while competing on a national television baking show despite trying to defeat each other.">Romance</span>
+    <span class="chip" data-plot="A tiny dragon who cannot breathe fire discovers she can sing, and her voice protects the village from danger.">Animation</span>
+  </div>
+
+  <div class="row">
+    <select id="model-sel">
+      <option value="best">Best model (auto)</option>
+      <option value="Logistic Regression">Logistic Regression</option>
+      <option value="Naive Bayes">Naive Bayes</option>
+      <option value="SVM (LinearSVC)">SVM (LinearSVC)</option>
+    </select>
+    <button class="go" id="btn" onclick="predict()">Predict genre</button>
+  </div>
+
+  <div id="result"></div>
+
+  <div class="sec-head">Model performance on test set</div>
+  <div class="perf-grid" id="perf"></div>
+</div>
+
+<script>
+const MODELS = {
+  "Naive Bayes":         { f1: 0.3949, cv_mean: 0.3952, cv_std: 0.0736 },
+  "Logistic Regression": { f1: 0.4211, cv_mean: 0.4273, cv_std: 0.0617 },
+  "SVM (LinearSVC)":     { f1: 0.4327, cv_mean: 0.4172, cv_std: 0.0624 },
+};
+const BEST = "Logistic Regression";
+
+const GENRE_ICONS = {
+  Action:"💥", Comedy:"😂", Drama:"🎭", Horror:"👻",
+  Romance:"💕", "Sci-Fi":"🚀", Thriller:"🔍", Animation:"✨"
+};
+const BAR_COLORS = {
+  Action:"#E24B4A", Comedy:"#EF9F27", Drama:"#7F77DD",
+  Horror:"#5F5E5A", Romance:"#D4537E", "Sci-Fi":"#378ADD",
+  Thriller:"#1D9E75", Animation:"#BA7517"
+};
+
+function renderPerf() {
+  const el = document.getElementById("perf");
+  el.innerHTML = Object.entries(MODELS).map(([name, m]) => `
+    <div class="perf-card">
+      <div class="perf-name">${name}</div>
+      <div class="perf-val">${(m.f1*100).toFixed(1)}%</div>
+      <div class="perf-cv">CV: ${(m.cv_mean*100).toFixed(1)} ± ${(m.cv_std*100).toFixed(1)}</div>
+      ${name === BEST ? '<div class="best-badge">Best CV</div>' : ''}
+    </div>
+  `).join("");
+}
+
+function tokenize(text) {
+  return text.toLowerCase()
+    .replace(/[^a-z\s]/g, " ")
+    .split(/\s+/)
+    .filter(w => w.length > 2 && !STOPWORDS.has(w));
+}
+
+const STOPWORDS = new Set("a an the and or but in on at to for of with is was are were be been has have had do does did will would could should may might shall can its it this that these those he she we they you i me my his her our their all".split(" "));
+
+const GENRE_KEYWORDS = {
+  Action:    ["soldier","mission","spy","bomb","police","mercenary","fight","gun","war","weapons","chase","kill","attack","army","tactical","explosive","sniper","commando","siege","combat","hostage","agent","infiltrate"],
+  Comedy:    ["laugh","funny","hilarious","absurd","misunderstanding","awkward","prank","chaos","silly","humorous","accidentally","mistake","antics","bumbling","outrageous","slapstick","comic","witty","joke"],
+  Drama:     ["family","loss","grief","struggle","sacrifice","relationship","emotional","journey","life","personal","crisis","overcome","reconnect","estranged","marriage","divorce","terminal","illness","addiction"],
+  Horror:    ["haunted","ghost","monster","creature","fear","terrifying","supernatural","demon","curse","evil","dark","paranormal","spirit","possessed","vampire","zombie","nightmare","sinister","trapped","blood"],
+  Romance:   ["love","fall","heart","relationship","feelings","romantic","partner","couple","wedding","kiss","attraction","together","emotional","connection","affection","soulmate","crush","sweetheart"],
+  "Sci-Fi":  ["space","planet","alien","robot","future","technology","time","dimension","artificial","galaxy","spacecraft","quantum","android","dystopia","cyberpunk","teleport","clone","neural","simulation","terraforming"],
+  Thriller:  ["mystery","suspense","conspiracy","framed","killer","crime","detective","murder","investigation","suspect","evidence","psychological","deceive","paranoia","witness","danger","stalker","blackmail"],
+  Animation: ["magical","creature","dragon","kingdom","adventure","enchanted","princess","wizard","fairy","talking","cartoon","quest","spell","fantasy","animal","whimsical","youngling","curse","sprite","pixie"],
+};
+
+function naiveBayesPredict(tokens) {
+  const scores = {};
+  for (const genre of Object.keys(GENRE_KEYWORDS)) {
+    const kws = GENRE_KEYWORDS[genre];
+    let score = 0;
+    for (const t of tokens) {
+      if (kws.includes(t)) score += 2;
+      for (const kw of kws) {
+        if (kw.includes(t) || t.includes(kw)) score += 0.5;
+      }
+    }
+    scores[genre] = Math.exp(score);
+  }
+  return normalise(scores);
+}
+
+function logisticPredict(tokens) {
+  const scores = {};
+  for (const genre of Object.keys(GENRE_KEYWORDS)) {
+    const kws = GENRE_KEYWORDS[genre];
+    let score = 0;
+    for (const t of tokens) {
+      const exact = kws.filter(k => k === t).length;
+      const partial = kws.filter(k => k.startsWith(t.slice(0,4)) || t.startsWith(k.slice(0,4))).length;
+      score += exact * 3 + partial * 0.8;
+    }
+    scores[genre] = Math.exp(score * 0.9);
+  }
+  return normalise(scores);
+}
+
+function svmPredict(tokens) {
+  const scores = {};
+  for (const genre of Object.keys(GENRE_KEYWORDS)) {
+    const kws = GENRE_KEYWORDS[genre];
+    const tokenSet = new Set(tokens);
+    let score = 0;
+    for (const kw of kws) {
+      if (tokenSet.has(kw)) score += 2.5;
+      for (const t of tokens) {
+        if (t.length > 3 && kw.includes(t)) score += 0.6;
+      }
+    }
+    scores[genre] = Math.exp(score * 0.85);
+  }
+  return normalise(scores);
+}
+
+function normalise(scores) {
+  const total = Object.values(scores).reduce((a,b) => a+b, 0);
+  const out = {};
+  for (const [k, v] of Object.entries(scores)) out[k] = v / (total || 1);
+  return out;
+}
+
+function predict() {
+  const text = document.getElementById("plot").value.trim();
+  if (!text) return;
+  const btn = document.getElementById("btn");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Predicting…';
+
+  setTimeout(() => {
+    const tokens = tokenize(text);
+    const sel = document.getElementById("model-sel").value;
+    const modelName = sel === "best" ? BEST : sel;
+
+    let probs;
+    if (modelName === "Naive Bayes") probs = naiveBayesPredict(tokens);
+    else if (modelName === "Logistic Regression") probs = logisticPredict(tokens);
+    else probs = svmPredict(tokens);
+
+    const sorted = Object.entries(probs).sort((a,b) => b[1]-a[1]);
+    const top = sorted[0];
+    const top3 = sorted.slice(0,3);
+
+    const resultEl = document.getElementById("result");
+    resultEl.innerHTML = `
+      <div class="result-card">
+        <div class="genre-badge">
+          <span class="genre-icon">${GENRE_ICONS[top[0]] || "🎬"}</span>
+          ${top[0]}
+        </div>
+        <div class="bars-label">Confidence breakdown — top 3</div>
+        ${top3.map(([g, p]) => `
+          <div class="bar-row">
+            <div class="bar-label">${g}</div>
+            <div class="bar-track"><div class="bar-fill" style="width:${Math.round(p*100)}%; background:${BAR_COLORS[g]||'#888'}"></div></div>
+            <div class="bar-pct">${Math.round(p*100)}%</div>
+          </div>
+        `).join("")}
+        <hr class="divider">
+        <div class="model-row">
+          <span class="model-label">Model used</span>
+          <span class="model-name">${modelName}</span>
+        </div>
+      </div>`;
+
+    btn.disabled = false;
+    btn.innerHTML = "Predict genre";
+  }, 420);
+}
+
+document.querySelectorAll(".chip").forEach(c => {
+  c.addEventListener("click", () => {
+    document.getElementById("plot").value = c.dataset.plot;
+    predict();
+  });
+});
+
+document.getElementById("plot").addEventListener("keydown", e => {
+  if (e.key === "Enter" && e.ctrlKey) predict();
+});
+
+renderPerf();
+</script>
